@@ -27,10 +27,10 @@ app.get('/', (req, res) => {
 });
 
 // Rotas da API
-const cursosRoutes = require('./src/routes/cursos');
-const alunosRoutes = require('./src/routes/alunos');
-const matriculasRoutes = require('./src/routes/matriculas');
-const progressoRoutes = require('./src/routes/progresso');
+const cursosRoutes = require('./routes/cursos');
+const alunosRoutes = require('./routes/alunos');
+const matriculasRoutes = require('./routes/matriculas');
+const progressoRoutes = require('./routes/progresso');
 
 app.use('/api/cursos', cursosRoutes);
 app.use('/api/alunos', alunosRoutes);

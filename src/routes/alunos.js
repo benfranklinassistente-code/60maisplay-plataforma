@@ -1,140 +1,129 @@
 const express = require('express');
 const router = express.Router();
+const Database = require('../database');
 
-// Mock de dados de alunos
-let alunos = [
-    {
-        id: 1,
-        nome: 'Dona Maria',
-        email: 'maria@email.com',
-        telefone: '(11) 99999-9999',
-        cidade: 'São Paulo',
-        estado: 'SP',
-        nivel_conhecimento: 'iniciante',
-        ativo: true,
-        data_cadastro: '2026-02-10T10:00:00Z',
-        cursos_matriculados: 2
-    },
-    {
-        id: 2,
-        nome: 'Seu Joaquim',
-        email: 'joaquim@email.com',
-        telefone: '(11) 98888-8888',
-        cidade: 'São Paulo',
-        estado: 'SP',
-        nivel_conhecimento: 'iniciante',
-        ativo: true,
-        data_cadastro: '2026-02-10T11:00:00Z',
-        cursos_matriculados: 1
-    }
-];
+const db = new Database();
 
 // GET /api/alunos - Listar alunos
 router.get('/', (req, res) => {
-    const { ativo, cidade } = req.query;
-    
-    let resultado = alunos;
-    
-    if (ativo !== undefined) {
-        resultado = resultado.filter(a => a.ativo === (ativo === 'true'));
+    try {
+        const { ativo, cidade } = req.query;
+        let alunos = db.getAlunos();
+        
+        if (ativo !== undefined) {
+            alunos = alunos.filter(a => a.ativo === (ativo === 'true'));
+        }
+        if (cidade) {
+            alunos = alunos.filter(a => a.cidade.toLowerCase().includes(cidade.toLowerCase()));
+        }
+        
+        // Não retornar senha
+        alunos = alunos.map(a => {
+            const { senha, ...alunoSemSenha } = a;
+            return alunoSemSenha;
+        });
+        
+        res.json({
+            success: true,
+            count: alunos.length,
+            data: alunos
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
-    if (cidade) {
-        resultado = resultado.filter(a => a.cidade.toLowerCase().includes(cidade.toLowerCase()));
-    }
-    
-    res.json({
-        success: true,
-        count: resultado.length,
-        data: resultado
-    });
 });
 
-// GET /api/alunos/:id - Buscar aluno específico
+// GET /api/alunos/:id - Buscar aluno
 router.get('/:id', (req, res) => {
-    const aluno = alunos.find(a => a.id === parseInt(req.params.id));
-    
-    if (!aluno) {
-        return res.status(404).json({
-            success: false,
-            message: 'Aluno não encontrado'
+    try {
+        const aluno = db.getAlunoById(parseInt(req.params.id));
+        
+        if (!aluno) {
+            return res.status(404).json({
+                success: false,
+                message: 'Aluno não encontrado'
+            });
+        }
+        
+        // Não retornar senha
+        const { senha, ...alunoSemSenha } = aluno;
+        
+        res.json({
+            success: true,
+            data: alunoSemSenha
         });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
-    
-    res.json({
-        success: true,
-        data: aluno
-    });
 });
 
 // POST /api/alunos - Criar novo aluno (cadastro)
 router.post('/', (req, res) => {
-    const { nome, email, telefone, cidade, estado } = req.body;
-    
-    if (!nome || !email) {
-        return res.status(400).json({
-            success: false,
-            message: 'Nome e email são obrigatórios'
+    try {
+        const { nome, email, senha, telefone, cidade, estado } = req.body;
+        
+        if (!nome || !email || !senha) {
+            return res.status(400).json({
+                success: false,
+                message: 'Nome, email e senha são obrigatórios'
+            });
+        }
+        
+        const novoAluno = db.addAluno({
+            nome,
+            email,
+            senha,
+            telefone: telefone || '',
+            cidade: cidade || '',
+            estado: estado || '',
+            nivel_conhecimento: 'iniciante'
         });
-    }
-    
-    // Verificar se email já existe
-    if (alunos.find(a => a.email === email)) {
-        return res.status(400).json({
-            success: false,
-            message: 'Email já cadastrado'
+        
+        // Não retornar senha
+        const { senha: _, ...alunoSemSenha } = novoAluno;
+        
+        res.status(201).json({
+            success: true,
+            message: 'Aluno cadastrado com sucesso',
+            data: alunoSemSenha
         });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
     }
-    
-    const novoAluno = {
-        id: alunos.length + 1,
-        nome,
-        email,
-        telefone: telefone || '',
-        cidade: cidade || '',
-        estado: estado || '',
-        nivel_conhecimento: 'iniciante',
-        ativo: true,
-        data_cadastro: new Date().toISOString(),
-        cursos_matriculados: 0
-    };
-    
-    alunos.push(novoAluno);
-    
-    res.status(201).json({
-        success: true,
-        message: 'Aluno cadastrado com sucesso',
-        data: novoAluno
-    });
 });
 
 // GET /api/alunos/:id/cursos - Cursos do aluno
 router.get('/:id/cursos', (req, res) => {
-    const aluno = alunos.find(a => a.id === parseInt(req.params.id));
-    
-    if (!aluno) {
-        return res.status(404).json({
-            success: false,
-            message: 'Aluno não encontrado'
-        });
-    }
-    
-    // Mock de matrículas
-    const cursosMatriculados = [
-        {
-            curso_id: 1,
-            titulo: 'WhatsApp Seguro para Idosos 60+',
-            progresso: 45,
-            status: 'em_andamento',
-            ultimo_acesso: '2026-02-10T14:30:00Z'
+    try {
+        const alunoId = parseInt(req.params.id);
+        const aluno = db.getAlunoById(alunoId);
+        
+        if (!aluno) {
+            return res.status(404).json({
+                success: false,
+                message: 'Aluno não encontrado'
+            });
         }
-    ];
-    
-    res.json({
-        success: true,
-        aluno_id: aluno.id,
-        aluno_nome: aluno.nome,
-        data: cursosMatriculados
-    });
+        
+        const matriculas = db.getMatriculasByAluno(alunoId);
+        const cursosCompletos = matriculas.map(m => {
+            const curso = db.getCursoById(m.curso_id);
+            return {
+                ...m,
+                curso: curso || { titulo: 'Curso não encontrado' }
+            };
+        });
+        
+        res.json({
+            success: true,
+            aluno_id: aluno.id,
+            aluno_nome: aluno.nome,
+            total_cursos: cursosCompletos.length,
+            data: cursosCompletos
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 });
 
 module.exports = router;
