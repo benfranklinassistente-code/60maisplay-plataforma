@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - 60maisPlay</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/login.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <!-- Lado Esquerdo - Imagem/Brand -->
+        <div class="login-left">
+            <div class="brand">
+                <span class="logo-text">60mais</span><span class="logo-play">Play</span>
+            </div>
+            
+            <h1>Aprenda tecnologia<br>no seu ritmo</h1>
+            
+            <p class="subtitle">Cursos de tecnologia pensados especialmente para você.</p>
+            
+            <ul class="features">
+                <li>
+                    <span class="check">✓</span>
+                    + de 25 cursos disponíveis
+                </li>
+                <li>
+                    <span class="check">✓</span>
+                    Aulas curtas e objetivas
+                </li>
+                <li>
+                    <span class="check">✓</span>
+                    Suporte por WhatsApp
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Lado Direito - Formulário -->
+        <div class="login-right">
+            <div class="login-box">
+                <h2>Bem-vindo de volta!</h2>
+                <p class="login-subtitle">Entre com seus dados para continuar</p>
+                
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="email">E-mail</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">✉️</span>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                placeholder="Digite seu e-mail aqui"
+                                required
+                            >
+                        </div>
+                        <span class="hint">Exemplo: maria@email.com</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="senha">Senha</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input 
+                                type="password" 
+                                id="senha" 
+                                name="senha" 
+                                placeholder="Digite sua senha"
+                                required
+                            >
+                            <button type="button" class="toggle-password" onclick="toggleSenha()">
+                                👁️
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-options">
+                        <label class="remember">
+                            <input type="checkbox" name="lembrar">
+                            <span>Lembrar de mim neste computador</span>
+                        </label>
+                        
+                        <a href="#" class="forgot-password">Esqueceu a senha?</a>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-login">
+                        <span>➜</span>
+                        Entrar na Plataforma
+                    </button>
+                </form>
+                
+                <div class="divider">
+                    <span>ou</span>
+                </div>
+                
+                <p class="signup-text">
+                    Ainda não tem conta?
+                    <a href="/cadastro.html">Cadastre-se grátis</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- WhatsApp Float -->
+    <a href="https://wa.me/5511953545939" class="whatsapp-float" target="_blank">
+        💬
+    </a>
+    
+    <script>
+        // Toggle senha visível
+        function toggleSenha() {
+            const input = document.getElementById('senha');
+            const type = input.type === 'password' ? 'text' : 'password';
+            input.type = type;
+        }
+        
+        // Login
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            
+            // Simular login (na versão final, conectar com API)
+            try {
+                // Buscar aluno por email
+                const response = await AlunosAPI.listar();
+                
+                if (response.success) {
+                    const aluno = response.data.find(a => a.email === email);
+                    
+                    if (aluno) {
+                        // Salvar no localStorage
+                        localStorage.setItem('usuario', JSON.stringify(aluno));
+                        
+                        // Redirecionar
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const redirect = urlParams.get('redirect') || '/dashboard.html';
+                        window.location.href = redirect;
+                    } else {
+                        alert('E-mail não encontrado. Verifique ou cadastre-se.');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro no login:', error);
+                alert('Erro ao fazer login. Tente novamente.');
+            }
+        });
+    </script>
+    
+    <script src="/js/api.js"></script>
+</body>
+</html>
