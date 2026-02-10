@@ -1,0 +1,36 @@
+# Dependências
+node_modules/
+package-lock.json
+
+# Banco de dados local
+database/*.db
+database/*.db-journal
+
+# Variáveis de ambiente
+.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Uploads (se houver)
+uploads/
+public/uploads/
+
+# Test coverage
+coverage/
+
+# Build
+build/
+dist/
